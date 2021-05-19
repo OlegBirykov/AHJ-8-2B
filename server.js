@@ -1,7 +1,6 @@
 const http = require('http');
 const Koa = require('koa');
 const cors = require('koa2-cors');
-// const uuid = require('uuid');
 const WS = require('ws');
 
 const app = new Koa();
@@ -38,6 +37,7 @@ wsServer.on('connection', (ws) => {
     switch (req.event) {
       case 'connect':
         res.event = Array.from(users.values()).includes(req.name) ? 'noconnect' : 'connect';
+        res.name = req.name;
         ws.send(JSON.stringify(res));
         if (res.event === 'noconnect') {
           return;
