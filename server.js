@@ -8,36 +8,35 @@ const app = new Koa();
 app.use(cors());
 
 const users = new Map();
+const messages = [];
 
 const port = process.env.PORT || 7070;
 const server = http.createServer(app.callback());
 const wsServer = new WS.Server({ server });
 
 wsServer.on('connection', (ws) => {
-//  const errCallback = (err) => {
-//    if (err) {
-  // TODO: handle error
-//    }
-//  };
   const sendUserList = () => {
-    const json = JSON.stringify({
+    const res = {
       event: 'users',
       users: Array.from(users.values()),
-    });
+    };
 
     Array.from(wsServer.clients)
       .filter((o) => o.readyState === WS.OPEN)
-      .forEach((o) => o.send(json));
+      .forEach((o) => o.send(JSON.stringify(res)));
   };
 
   ws.on('message', (msg) => {
     const req = JSON.parse(msg);
-    const res = {};
+    let res;
+    let message;
 
     switch (req.event) {
       case 'connect':
-        res.event = Array.from(users.values()).includes(req.name) ? 'noconnect' : 'connect';
-        res.name = req.name;
+        res = {
+          event: Array.from(users.values()).includes(req.name) ? 'noconnect' : 'connect',
+          name: req.name,
+        };
         ws.send(JSON.stringify(res));
         if (res.event === 'noconnect') {
           return;
@@ -48,13 +47,35 @@ wsServer.on('connection', (ws) => {
         break;
 
       case 'message':
+        message = {
+          text: req.text,
+          name: users.get(ws),
+          time: Date.now(),
+        };
+
+        if (messages.length && messages[messages.length - 1].time === message.time) {
+          message.time++;
+        }
+        messages.push(message);
+
+        res = {
+          event: 'new-message',
+        };
+        Array.from(wsServer.clients)
+          .filter((o) => o.readyState === WS.OPEN)
+          .forEach((o) => o.send(JSON.stringify(res)));
         break;
+
+      case 'request-messages':
+        res = {
+          event: 'messages',
+          messages: messages.filter((o) => o.time > req.time),
+        };
+        ws.send(JSON.stringify(res));
+        break;
+
       default:
     }
-  });
-
-  ws.on('error', () => {
-    // console.log('ошибочка вышла');
   });
 
   ws.on('close', () => {
