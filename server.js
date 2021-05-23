@@ -10,6 +10,13 @@ app.use(cors());
 const users = new Map();
 const messages = [];
 
+// Для работы на бесплатном аккаунте Heroku
+const serverNoSleep = (time) => {
+  if (time) {
+    setTimeout(() => serverNoSleep(time - 1), 60000);
+  }
+};
+
 const port = process.env.PORT || 7070;
 const server = http.createServer(app.callback());
 const wsServer = new WS.Server({ server });
@@ -30,6 +37,8 @@ wsServer.on('connection', (ws) => {
     const req = JSON.parse(msg);
     let res;
     let message;
+
+    serverNoSleep(10);
 
     switch (req.event) {
       case 'connect':
@@ -71,7 +80,9 @@ wsServer.on('connection', (ws) => {
           event: 'messages',
           messages: messages.filter((o) => o.time > req.time),
         };
-        ws.send(JSON.stringify(res));
+        if (res.messages.length) {
+          ws.send(JSON.stringify(res));
+        }
         break;
 
       default:
