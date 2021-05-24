@@ -71,9 +71,7 @@ wsServer.on('connection', (ws) => {
           event: 'messages',
           messages: messages.filter((o) => o.time > req.time),
         };
-        if (res.messages.length) {
-          ws.send(JSON.stringify(res));
-        }
+        ws.send(JSON.stringify(res));
         break;
 
       default:
