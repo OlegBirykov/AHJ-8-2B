@@ -1,15 +1,15 @@
 const https = require('https');
 const WS = require('ws');
-const fs = require('fs');
+// const fs = require('fs');
 
 const users = new Map();
 const messages = [];
 
 const port = process.env.PORT || 7070;
 const server = https.createServer({
-  cert: fs.readFileSync('./ssl/certificate.crt'),
-  key: fs.readFileSync('./ssl/private.key'),
-  ca: fs.readFileSync('./ssl/ca_bundle.crt'),
+  // cert: fs.readFileSync('./ssl/certificate.crt'),
+  // key: fs.readFileSync('./ssl/private.key'),
+  // ca: fs.readFileSync('./ssl/ca_bundle.crt'),
 });
 const wsServer = new WS.Server({ server });
 
