@@ -9,7 +9,7 @@ const port = process.env.PORT || 7070;
 const server = https.createServer({
   cert: fs.readFileSync('./ssl/certificate.crt'),
   key: fs.readFileSync('./ssl/private.key'),
-  ca: fs.readFileSync('./ssl/ca_bundle.crt')
+  ca: fs.readFileSync('./ssl/ca_bundle.crt'),
 });
 const wsServer = new WS.Server({ server });
 
