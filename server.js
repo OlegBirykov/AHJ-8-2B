@@ -1,17 +1,16 @@
-const http = require('http');
-const Koa = require('koa');
-const cors = require('koa2-cors');
+const https = require('https');
 const WS = require('ws');
-
-const app = new Koa();
-
-app.use(cors());
+const fs = require('fs');
 
 const users = new Map();
 const messages = [];
 
 const port = process.env.PORT || 7070;
-const server = http.createServer(app.callback());
+const server = https.createServer({
+  cert: fs.readFileSync('./ssl/certificate.crt'),
+  key: fs.readFileSync('./ssl/private.key'),
+  ca: fs.readFileSync('./ssl/ca_bundle.crt')
+});
 const wsServer = new WS.Server({ server });
 
 wsServer.on('connection', (ws) => {
