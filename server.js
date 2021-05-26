@@ -72,6 +72,10 @@ wsServer.on('connection', (ws) => {
     }
   });
 
+  ws.on('error', () => {
+    ws.close();
+  });
+
   ws.on('close', () => {
     users.delete(ws);
     sendUserList();
