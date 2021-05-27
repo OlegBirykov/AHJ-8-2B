@@ -3,6 +3,7 @@ const WS = require('ws');
 
 const users = new Map();
 const messages = [];
+const timeout = 20;
 
 const port = process.env.PORT || 7070;
 const server = http.createServer();
@@ -12,7 +13,7 @@ wsServer.on('connection', (ws) => {
   const sendUserList = () => {
     const res = {
       event: 'users',
-      users: Array.from(users.values()),
+      users: Array.from(users.values()).map((item) => item.name),
     };
 
     Array.from(wsServer.clients)
@@ -28,7 +29,7 @@ wsServer.on('connection', (ws) => {
     switch (req.event) {
       case 'connect':
         res = {
-          event: Array.from(users.values()).includes(req.name) ? 'noconnect' : 'connect',
+          event: Array.from(users.values()).find((item) => item.name === req.name) ? 'noconnect' : 'connect',
           name: req.name,
         };
         ws.send(JSON.stringify(res));
@@ -36,14 +37,17 @@ wsServer.on('connection', (ws) => {
           return;
         }
 
-        users.set(ws, req.name);
+        users.set(ws, {
+          name: req.name,
+          time: timeout,
+        });
         sendUserList();
         break;
 
       case 'message':
         message = {
           text: req.text,
-          name: users.get(ws),
+          name: users.get(ws).name,
           time: Date.now(),
         };
 
