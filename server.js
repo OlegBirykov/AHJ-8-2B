@@ -5,6 +5,20 @@ const users = new Map();
 const messages = [];
 const timeout = 20;
 
+const timer = () => users.forEach((state, ws, map) => {
+  const userState = {
+    name: state.name,
+    time: state.time - 1,
+  };
+  map.set(ws, userState);
+
+  if (!userState.time) {
+    ws.close();
+  }
+});
+
+setInterval(timer, 1000);
+
 const port = process.env.PORT || 7070;
 const server = http.createServer();
 const wsServer = new WS.Server({ server });
@@ -25,6 +39,12 @@ wsServer.on('connection', (ws) => {
     const req = JSON.parse(msg);
     let res;
     let message;
+
+    if (users.has(ws)) {
+      const userState = users.get(ws);
+      userState.time = timeout;
+      users.set(ws, userState);
+    }
 
     switch (req.event) {
       case 'connect':
@@ -68,6 +88,13 @@ wsServer.on('connection', (ws) => {
         res = {
           event: 'messages',
           messages: messages.filter((o) => o.time > req.time),
+        };
+        ws.send(JSON.stringify(res));
+        break;
+
+      case 'ping':
+        res = {
+          event: 'pong',
         };
         ws.send(JSON.stringify(res));
         break;
